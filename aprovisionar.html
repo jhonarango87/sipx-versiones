@@ -1,0 +1,83 @@
+<!doctype html>
+<!--
+  La pagina del boton «Configurar SIPX Phone» del correo de bienvenida.
+
+  Se publica en GitHub Pages (jhonarango87/sipx-versiones) porque necesita un
+  certificado que cualquier telefono acepte, y el del SBC es de su CA interna.
+  El codigo de un solo uso, la direccion del SBC y la huella de su certificado
+  van detras de «#»: el navegador NO los manda a GitHub. La pagina solo los lee
+  y abre la app con sipx://aprovisionar?b=...&t=...&p=..., que es quien canjea
+  el codigo contra el SBC. Ref. backend services/aprovisionamiento.ts
+
+  Original en herramientas/aprovisionamiento/aprovisionar.html del repositorio
+  del SBC; lo de GitHub Pages es una copia.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <title>Configurar SIPX Phone</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+      background: radial-gradient(900px 500px at 80% -10%, rgba(31,107,255,.25), transparent 60%), #020b1f;
+      color: #eef4ff; font: 16px/1.5 "Segoe UI", Roboto, system-ui, sans-serif;
+    }
+    main { width: 100%; max-width: 440px; text-align: center; }
+    img { height: 40px; margin-bottom: 26px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { color: #a9b8d6; margin: 0 0 18px; }
+    .boton {
+      display: block; width: 100%; padding: 15px; border-radius: 14px; border: 0; margin-bottom: 12px;
+      font-size: 17px; font-weight: 700; text-decoration: none; color: #fff;
+      background: linear-gradient(135deg, #00c6ff, #1f6bff); box-shadow: 0 8px 24px rgba(31,107,255,.35);
+    }
+    .boton.secundario { background: none; border: 1.5px solid rgba(255,255,255,.25); box-shadow: none; font-weight: 600; }
+    .nota { font-size: 13px; color: #7182a6; margin-top: 18px; }
+    .error { color: #fca5a5; }
+    ol { text-align: left; color: #a9b8d6; padding-left: 20px; margin: 0 0 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="logo-sipx.png" alt="SIPX">
+    <div id="contenido"></div>
+  </main>
+  <script>
+    'use strict';
+    const datos = new URLSearchParams(location.hash.slice(1));
+    // Fuera de la barra de direcciones y del historial en cuanto se lee.
+    history.replaceState(null, '', location.pathname);
+    const b = datos.get('b'), t = datos.get('t'), p = datos.get('p');
+    const apk = datos.get('apk') || 'https://github.com/jhonarango87/sipx-versiones/releases/latest/download/sipx-phone.apk';
+    const c = document.getElementById('contenido');
+    const escapar = (s) => String(s).replace(/[&<>"']/g, (x) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[x]));
+
+    if (!b || !t || !p) {
+      c.innerHTML = '<h1>Enlace incompleto</h1><p class="error">Abra el botón directamente desde el correo de bienvenida. Si el problema sigue, pida otro enlace a su administrador.</p>';
+    } else {
+      const consulta = new URLSearchParams({ b, t, p }).toString();
+      const directo = 'sipx://aprovisionar?' + consulta;
+      const android = /android/i.test(navigator.userAgent);
+      // En Android, «intent:» abre la app y, si no esta instalada, va a descargarla.
+      const intent = 'intent://aprovisionar?' + consulta
+        + '#Intent;scheme=sipx;package=co.com.electrocom.sipxphone;S.browser_fallback_url=' + encodeURIComponent(apk) + ';end';
+      c.innerHTML = `
+        <h1>Configurar SIPX Phone</h1>
+        <p>Toque el botón: la aplicación se abre y configura su extensión sola.</p>
+        <a class="boton" id="abrir" href="${escapar(android ? intent : directo)}">Abrir SIPX Phone</a>
+        <a class="boton secundario" href="${escapar(apk)}">¿No la tiene? Descargar SIPX Phone</a>
+        <ol>
+          <li>Si aún no la tiene, descárguela e instálela.</li>
+          <li>Vuelva a este correo y toque «Configurar SIPX Phone» otra vez.</li>
+          <li>En la aplicación, toque «Configurar».</li>
+        </ol>
+        <p class="nota">El enlace sirve una sola vez. ${android ? '' : 'Ábralo desde el celular donde instaló SIPX Phone.'}</p>`;
+    }
+  </script>
+</body>
+</html>
