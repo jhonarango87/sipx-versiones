@@ -1,0 +1,114 @@
+<!doctype html>
+<!--
+  SIPX Phone: configurar la extension desde el correo de bienvenida.
+  Los datos van detras de «#» y no salen del navegador.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <title>Configurar SIPX Phone</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+      background: radial-gradient(900px 500px at 80% -10%, rgba(31,107,255,.25), transparent 60%), #020b1f;
+      color: #eef4ff; font: 16px/1.5 "Segoe UI", Roboto, system-ui, sans-serif;
+    }
+    main { width: 100%; max-width: 440px; text-align: center; }
+    img { height: 34px; margin-bottom: 26px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { color: #a9b8d6; margin: 0 0 18px; }
+    .boton {
+      display: block; width: 100%; padding: 15px; border-radius: 14px; border: 0; margin-bottom: 12px;
+      font-size: 17px; font-weight: 700; text-decoration: none; color: #fff;
+      background: linear-gradient(135deg, #00c6ff, #1f6bff); box-shadow: 0 8px 24px rgba(31,107,255,.35);
+    }
+    .boton.secundario { background: none; border: 1.5px solid rgba(255,255,255,.25); box-shadow: none; font-weight: 600; }
+    .nota { font-size: 13px; color: #7182a6; margin-top: 18px; }
+    .error { color: #fca5a5; }
+    ol { text-align: left; color: #a9b8d6; padding-left: 20px; margin: 0 0 18px; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="logo-sipx-phone.png" alt="SIPX Phone">
+    <div id="contenido"></div>
+  </main>
+  <script>
+    'use strict';
+    const datos = new URLSearchParams(location.hash.slice(1));
+    // Fuera de la barra de direcciones y del historial en cuanto se lee.
+    history.replaceState(null, '', location.pathname);
+    const b = datos.get('b'), t = datos.get('t'), p = datos.get('p');
+    // Las descargas viven junto a esta pagina (descargas.sipx.co/descargas/), no en
+    // el repositorio: el correo no dice de donde se publica. Ref. publicar-descargas.mjs
+    const DESCARGAS = 'descargas/';
+    const apk = datos.get('apk') || DESCARGAS + 'sipx-phone.apk';
+    // El boton «Configurar en el computador» lleva pc=1 y las descargas de escritorio.
+    const pc = datos.get('pc') === '1';
+    const win = datos.get('win') || DESCARGAS + 'sipx-phone-windows.exe';
+    const mac = datos.get('mac') || DESCARGAS + 'sipx-phone-mac-arm64.dmg';
+    const macx64 = datos.get('macx64') || DESCARGAS + 'sipx-phone-mac-x64.dmg';
+    const c = document.getElementById('contenido');
+    const escapar = (s) => String(s).replace(/[&<>"']/g, (x) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[x]));
+
+    if (!b || !t || !p) {
+      c.innerHTML = '<h1>Enlace incompleto</h1><p class="error">Abra el botón directamente desde el correo de bienvenida. Si el problema sigue, pida otro enlace a su administrador.</p>';
+    } else if (pc) {
+      // En el computador: el sistema abre SIPX Phone con el enlace sipx:// (lo
+      // registra su instalador). Si no lo hace, se copia y se pega en la app.
+      const directo = 'sipx://aprovisionar?' + new URLSearchParams({ b, t, p }).toString();
+      const esMac = /Macintosh|Mac OS X/i.test(navigator.userAgent);
+      const movil = /android|iphone|ipad/i.test(navigator.userAgent);
+      const descargas = esMac
+        ? `<a class="boton secundario" href="${escapar(mac)}">Descargar para Mac (Apple M1, M2, M3…)</a>
+           <a class="boton secundario" href="${escapar(macx64)}">Descargar para Mac (Intel)</a>`
+        : `<a class="boton secundario" href="${escapar(win)}">¿No la tiene? Descargar para Windows</a>`;
+      c.innerHTML = `
+        <h1>Configurar SIPX Phone en el computador</h1>
+        ${movil ? '<p class="error">Este botón es para el computador. En el celular use «Configurar SIPX Phone» del mismo correo.</p>' : ''}
+        <p>Haga clic: SIPX Phone se abre y configura su extensión sola. Si el navegador pregunta, permita abrir SIPX Phone.</p>
+        <a class="boton" id="abrir" href="${escapar(directo)}">Abrir SIPX Phone</a>
+        ${descargas}
+        <ol>
+          <li>Si aún no la tiene, descárguela e instálela.</li>
+          <li>Vuelva a este correo y haga clic en «Configurar en el computador» otra vez.</li>
+          <li>En SIPX Phone, haga clic en «Configurar».</li>
+        </ol>
+        <p class="nota">¿No se abre? Copie el enlace y, en SIPX Phone › Ajustes, use «Configurar con el enlace del correo».</p>
+        <button class="boton secundario" id="copiar" type="button">Copiar enlace de configuración</button>
+        <p class="nota">El enlace sirve una sola vez.</p>`;
+      document.getElementById('copiar').addEventListener('click', async (e) => {
+        try {
+          await navigator.clipboard.writeText(directo);
+          e.target.textContent = 'Copiado: péguelo en SIPX Phone';
+        } catch {
+          e.target.textContent = 'No se pudo copiar';
+        }
+      });
+    } else {
+      const consulta = new URLSearchParams({ b, t, p }).toString();
+      const directo = 'sipx://aprovisionar?' + consulta;
+      const android = /android/i.test(navigator.userAgent);
+      // En Android, «intent:» abre la app y, si no esta instalada, va a descargarla.
+      const intent = 'intent://aprovisionar?' + consulta
+        + '#Intent;scheme=sipx;package=co.com.electrocom.sipxphone;S.browser_fallback_url=' + encodeURIComponent(apk) + ';end';
+      c.innerHTML = `
+        <h1>Configurar SIPX Phone</h1>
+        <p>Toque el botón: la aplicación se abre y configura su extensión sola.</p>
+        <a class="boton" id="abrir" href="${escapar(android ? intent : directo)}">Abrir SIPX Phone</a>
+        <a class="boton secundario" href="${escapar(apk)}">¿No la tiene? Descargar SIPX Phone</a>
+        <ol>
+          <li>Si aún no la tiene, descárguela e instálela.</li>
+          <li>Vuelva a este correo y toque «Configurar SIPX Phone» otra vez.</li>
+          <li>En la aplicación, toque «Configurar».</li>
+        </ol>
+        <p class="nota">El enlace sirve una sola vez. ${android ? '' : 'Ábralo desde el celular donde instaló SIPX Phone.'}</p>`;
+    }
+  </script>
+</body>
+</html>
