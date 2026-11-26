@@ -1,0 +1,19 @@
+{
+  "v": 1,
+  "publicado": "2026-11-26T05:23:09.545Z",
+  "android": {
+    "version": "1.9.5",
+    "versionCode": 195,
+    "url": "https://descargas.sipx.co/descargas/sipx-phone-1.9.5.apk",
+    "sha256": "49949bb353694e16985d0f25def5850747744552db35e784fa2d2891b1ba73e9",
+    "urlAlterna": "https://github.com/jhonarango87/sipx-versiones/releases/latest/download/sipx-phone.apk",
+    "notas": "Las actualizaciones llegan también en redes que bloquean descargas.sipx.co."
+  },
+  "escritorio": {
+    "version": "1.8.5",
+    "url": "https://descargas.sipx.co/descargas/sipx-phone-1.8.5-windows.exe",
+    "sha256": "6c95f8cb0356f79a5350f98fb84b679c1e5d229136805338aa84a85e271a9778",
+    "urlAlterna": "https://github.com/jhonarango87/sipx-versiones/releases/latest/download/sipx-phone-windows.exe",
+    "notas": "Al hacer clic en el icono de SIPX Phone siempre aparece la ventana: se restaura si estaba minimizada, y si se había quedado congelada se abre de nuevo sin tener que cerrarlo en el Administrador de tareas."
+  }
+}
